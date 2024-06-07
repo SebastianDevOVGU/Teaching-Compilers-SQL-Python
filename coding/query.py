@@ -14,6 +14,7 @@ class QueryModule(torch.nn.Module):
     def select_column(self, table, columns):
         indices = torch.tensor(columns)
         return torch.index_select(table, 1, indices)
+    #returns a table with only the rows that match the condition statement
     def filter_rows(self, table, filter_cond, filter_value, filter_column):
         if filter_cond == "greater":
             mask = self.select_column(table, filter_column) > filter_value
