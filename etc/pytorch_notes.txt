@@ -1,0 +1,9 @@
+PyTorch:
+- optimized tensor library
+- main data structure used are tensors (https://pytorch.org/tutorials/beginner/basics/tensorqs_tutorial.html)
+- most functions optimized for tensors or only usable for tensors
+- tensors can be used and are optimized for usage on CPU and GPU
+- tensor datatypes: floating-point, complex, interger and boolean 
+- these functions can transform, modify, extract data stored in tensors
+- has own benchmark functions for measuring performance
+- iree-turbine provides integration of IREE for PyTorch
