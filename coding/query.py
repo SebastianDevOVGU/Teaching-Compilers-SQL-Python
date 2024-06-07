@@ -1,5 +1,6 @@
 import torch
-
+import operator
+ops = {">":operator.gt, ">=":operator.ge, "<":operator.lt, "<=":operator.le, "=":operator.eq, "<>":operator.ne}
 class QueryModule(torch.nn.Module):
     def __init__(self):
         super(QueryModule, self).__init__()
@@ -16,14 +17,7 @@ class QueryModule(torch.nn.Module):
         return torch.index_select(table, 1, indices)
     #returns a table with only the rows that match the condition statement
     def filter_rows(self, table, filter_cond, filter_value, filter_column):
-        if filter_cond == "greater":
-            mask = self.select_column(table, filter_column) > filter_value
-        elif filter_cond == "equal":
-            mask = self.select_column(table, filter_column) == filter_value
-        elif filter_cond == "less":
-            mask = self.select_column(table, filter_column) < filter_value
-        indices = torch.nonzero(mask)
-        return table[indices]
+        return table[torch.nonzero(ops[filter_cond](self.select_column(table, filter_column), filter_value))]
 
 
 #Tests
@@ -41,8 +35,8 @@ print(qm.select_rows(qm.from_table(tableDict, "B"), [2,7]))
 print("Table B with columns 0 and 1:")
 print(qm.select_column(qm.from_table(tableDict, "B"),[0,1]))
 print("Table B with rows that have a value greater than 0.5 in the first column:")
-print(qm.filter_rows(qm.from_table(tableDict, "B"), "greater", 0.5, [0]))
+print(qm.filter_rows(qm.from_table(tableDict, "B"), ">", 0.5, [0]))
 print("Table B with rows that have a value equal to 0.5 in the third column:")
-print(qm.filter_rows(qm.from_table(tableDict, "B"), "equal", 0.5, [2]))
+print(qm.filter_rows(qm.from_table(tableDict, "B"), "=", 0.5, [2]))
 print("Table B with rows that have a value less than 0.5 in the second column:")
-print(qm.filter_rows(qm.from_table(tableDict, "B"), "less", 0.5, [1]))
+print(qm.filter_rows(qm.from_table(tableDict, "B"), "<", 0.5, [1]))
