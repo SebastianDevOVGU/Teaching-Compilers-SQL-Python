@@ -29,4 +29,4 @@ def test_queryModule():
     print("SELECT X, Y FROM B WHERE Z < 70:")
     print(qm.filter_column(qm.filter_rows(qm.from_table(tableDict, "B"), bColumnNamesDict, ["AND",["<", "Z", 70]]), bColumnNamesDict, ["X", "Y"]))
 
-    print(qm.process_query("Select X, Y From B Where Z < 70"))
+    print(qm.process_query(tableDict, bColumnNamesDict, "Select X, Y From B Where Z < 70"))
