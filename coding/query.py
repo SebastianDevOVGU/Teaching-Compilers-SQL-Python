@@ -1,9 +1,37 @@
 import torch
 import operator
+from pglast import parser, enums, ast
 
 
 ops = {">":operator.gt, ">=":operator.ge, "<":operator.lt, "<=":operator.le, "=":operator.eq, "<>":operator.ne}
 
+def split_SelFroWhe(query):
+    root = parser.parse_sql(query)
+    stmt = root[0].stmt
+    selectstmt, fromstmt, wherestmt = [], [], []
+    for t in stmt.targetList:
+        selectstmt.append(t.val.fields[0].sval)
+    for f in stmt.fromClause:
+        fromstmt.append(f.relname)
+    if stmt.whereClause.boolop is enums.BoolExprType.AND_EXPR:
+        wherestmt.append("AND")
+    elif stmt.whereClause.boolop is enums.BoolExprType.OR_EXPR:
+        wherestmt.append("OR")
+    elif stmt.whereClause.boolop is enums.BoolExprType.NOT_EXPR:
+        wherestmt.append("NOT")
+    else:
+        return None
+    for w in stmt.whereClause.args:
+        rexpr = None
+        if isinstance(w.rexpr , ast.A_Const):
+            if isinstance(w.rexpr.val, ast.Integer):
+                rexpr = w.rexpr.val.ival
+            elif isinstance(w.rexpr.val, ast.Float):
+                rexpr = w.rexpr.val.fval    
+        else:
+            rexpr = w.rexpr.fields[0].sval
+        wherestmt.append([w.name[0].sval, w.lexpr.fields[0].sval, rexpr])
+    return selectstmt, fromstmt, wherestmt
 
 class QueryModule(torch.nn.Module):
     def __init__(self):
