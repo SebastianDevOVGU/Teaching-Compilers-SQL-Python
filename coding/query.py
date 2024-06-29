@@ -59,10 +59,22 @@ class QueryModule(torch.nn.Module):
     
     #returns a table with only the rows that match the condition statement
     #TODO: multiple condition statements
-    def filter_rows(self, table, column_name_dict, filter_cond, filter_value, filter_column_name):
-        indices = self.index_by_name(column_name_dict, filter_column_name)
-        return table[ops[filter_cond](table[:,indices[0]], filter_value)]
+    def filter_rows(self, table, column_name_dict, condition):
+        filter_column_names = []
+        for expr in condition[1:]:
+            filter_column_names.append(expr[1])
+            index = self.index_by_name(column_name_dict, filter_column_names)
+            table = table[ops[expr[0]](table[:,index[0]], expr[2])]
+        return table
 
     #returns a table with only the columns that are given by name
     def filter_column(self, table, column_name_dict, column_names_filter):
         return self.select_column(table, self.index_by_name(column_name_dict, column_names_filter))
+    
+    #process the query
+    def process_query(self, tableDict, columnNamesDict, query):
+        targets, table_names, condition = split_SelFroWhe(query)
+        tables = []
+        for t_name in table_names:
+            tables.append(self.filter_column(self.filter_rows(self.from_table(tableDict, t_name), columnNamesDict, condition), columnNamesDict, targets))
+        return tables
