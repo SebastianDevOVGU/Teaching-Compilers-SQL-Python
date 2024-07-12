@@ -13,15 +13,27 @@ def split_SelFroWhe(query):
         selectstmt.append(t.val.fields[0].sval)
     for f in stmt.fromClause:
         fromstmt.append(f.relname)
-    if stmt.whereClause.boolop is enums.BoolExprType.AND_EXPR:
-        wherestmt.append("AND")
-    elif stmt.whereClause.boolop is enums.BoolExprType.OR_EXPR:
-        wherestmt.append("OR")
-    elif stmt.whereClause.boolop is enums.BoolExprType.NOT_EXPR:
-        wherestmt.append("NOT")
+    if not isinstance(stmt.whereClause, ast.A_Expr):
+        if stmt.whereClause.boolop is enums.BoolExprType.AND_EXPR:
+            wherestmt.append("AND")
+        elif stmt.whereClause.boolop is enums.BoolExprType.OR_EXPR:
+            wherestmt.append("OR")
+        elif stmt.whereClause.boolop is enums.BoolExprType.NOT_EXPR:
+            wherestmt.append("NOT")
+        else:
+            return None
+        for w in stmt.whereClause.args:
+            rexpr = None
+            if isinstance(w.rexpr , ast.A_Const):
+                if isinstance(w.rexpr.val, ast.Integer):
+                    rexpr = w.rexpr.val.ival
+                elif isinstance(w.rexpr.val, ast.Float):
+                    rexpr = w.rexpr.val.fval    
+            else:
+                rexpr = w.rexpr.fields[0].sval
+            wherestmt.append([w.name[0].sval, w.lexpr.fields[0].sval, rexpr])
     else:
-        return None
-    for w in stmt.whereClause.args:
+        w = stmt.whereClause
         rexpr = None
         if isinstance(w.rexpr , ast.A_Const):
             if isinstance(w.rexpr.val, ast.Integer):
@@ -58,7 +70,6 @@ class QueryModule(torch.nn.Module):
         return indices
     
     #returns a table with only the rows that match the condition statement
-    #TODO: multiple condition statements
     def filter_rows(self, table, column_name_dict, condition):
         filter_column_names = []
         for expr in condition[1:]:
